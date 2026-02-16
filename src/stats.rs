@@ -33,12 +33,20 @@ impl Stats {
 
     pub fn increase_points_per_click(&mut self, increase: u32)
     {
-        self.points_per_click += increase;
+        if self.points >= 10
+        {
+            self.points -= 10;
+            self.points_per_click += increase;
+        }
     }
 
     pub fn increase_points_per_second(&mut self, increase: u32)
     {
-        self.points_per_second += increase;
+        if self.points >= 30
+        {
+            self.points -= 30;
+            self.points_per_second += increase;
+        }
     }
 }
 
