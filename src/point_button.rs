@@ -1,4 +1,5 @@
 use bevy::{color::palettes::basic::*, input_focus::InputFocus, prelude::*};
+use crate::stats::{self, Stats};
 
 pub struct ButtonPlugin;
 
@@ -10,12 +11,12 @@ impl Plugin for ButtonPlugin {
     }
 }
 
-const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
-const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
-const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
+const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.85);
+const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.95);
+const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.35, 1.00);
 
-const BUTTON_ALIGN: AlignItems = AlignItems::Baseline;
-const BUTTON_LAYOUT: JustifyContent = JustifyContent::FlexStart;
+const BUTTON_ALIGN: AlignItems = AlignItems::Center;
+const BUTTON_LAYOUT: JustifyContent = JustifyContent::Center;
 
 fn button_system(
     mut input_focus: ResMut<InputFocus>,
@@ -26,37 +27,33 @@ fn button_system(
             &mut BackgroundColor,
             &mut BorderColor,
             &mut Button,
-            &Children,
         ),
         Changed<Interaction>,
-    >,
-    mut text_query: Query<&mut Text>,
+        >,
+    mut stats_resource: ResMut<Stats>
 ) {
-    for (entity, interaction, mut color, mut border_color, mut button, children) in
+    for (entity, interaction, mut color, mut border_color, mut button) in
         &mut interaction_query
     {
-        let mut text = text_query.get_mut(children[0]).unwrap();
-
         match *interaction {
             Interaction::Pressed => {
                 input_focus.set(entity);
-                **text = "Press".to_string();
                 *color = PRESSED_BUTTON.into();
-                *border_color = BorderColor::all(RED);
+                *border_color = BorderColor::all(BLUE);
 
-                // The accessibility system's only update the button's state when the `Button` component is marked as changed.
+                //TODO: add point gain on button click
+                stats_resource.gain_points();
+
                 button.set_changed();
             }
             Interaction::Hovered => {
                 input_focus.set(entity);
-                **text = "Hover".to_string();
                 *color = HOVERED_BUTTON.into();
                 *border_color = BorderColor::all(Color::WHITE);
                 button.set_changed();
             }
             Interaction::None => {
                 input_focus.clear();
-                **text = "Button".to_string();
                 *color = NORMAL_BUTTON.into();
                 *border_color = BorderColor::all(Color::BLACK);
             }
@@ -81,21 +78,16 @@ fn button(_asset_server: &AssetServer) -> impl Bundle {
         children![(
             Button,
             Node {
-                width: px(150),
-                height: px(65),
-                top: px(15),
-                left: px(15),
+                width: px(200),
+                height: px(200),
                 border: UiRect::all(px(5)),
-                // horizontally center child text
                 justify_content: JustifyContent::Center,
-                // vertically center child text
                 align_items: AlignItems::Center,
                 border_radius: BorderRadius::MAX,
                 ..default()
             },
             BorderColor::all(Color::WHITE),
             BackgroundColor(Color::BLACK),
-            children![(Text::new("Button"), TextColor(Color::srgb(0.9, 0.9, 0.9)))]
         )],
     )
 }
