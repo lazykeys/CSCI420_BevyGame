@@ -32,6 +32,11 @@ impl Stats {
             self.points += self.points_per_click;
         }
     }
+    //function for the timer
+    pub fn gain_points_per_second(&mut self)
+    {
+        self.points += self.points_per_click;
+    }
 
     pub fn increase_points_per_click(&mut self, increase: u32)
     {
