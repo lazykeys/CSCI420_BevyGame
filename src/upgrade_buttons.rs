@@ -1,5 +1,4 @@
 use bevy::{color::palettes::basic::*, input_focus::InputFocus, prelude::*};
-use crate::stats::Stats;
 
 pub struct UpgradeButtonsPlugin;
 
@@ -23,6 +22,11 @@ enum UpgradeButtonType {
     IncreasePointsPerSecond
 }
 
+struct UpgradeButton {
+    text: String,
+    button_type: UpgradeButtonType
+}
+
 fn upgrade_buttons_system(
     mut input_focus: ResMut<InputFocus>,
     mut interaction_query: Query<
@@ -35,7 +39,6 @@ fn upgrade_buttons_system(
         ),
         Changed<Interaction>,
         >,
-    mut stats_resource: ResMut<Stats>
 ) {
     for (entity, interaction, mut color, mut border_color, mut button) in
         &mut interaction_query
@@ -47,7 +50,7 @@ fn upgrade_buttons_system(
                 *border_color = BorderColor::all(BLACK);
 
                 //TODO: add point gain on button click
-                stats_resource.gain_points();
+                //stats_resource.gain_points();
 
                 button.set_changed();
             }
@@ -68,16 +71,26 @@ fn upgrade_buttons_system(
 
 fn setup(mut commands: Commands) {
 
-    commands.spawn(upgrade_button(0, UpgradeButtonType::IncreasePointsPerClick));
-    commands.spawn(upgrade_button(1, UpgradeButtonType::IncreasePointsPerSecond));
+    let mut buttons: Vec<&UpgradeButton> = Vec::new();
+
+    let upgrade_button_1 = UpgradeButton{
+        text: String::from("Cost: 10 points -> Increase Points Per Click By 3"),
+        button_type: UpgradeButtonType::IncreasePointsPerClick
+    };
+
+    let upgrade_button_2 = UpgradeButton{
+    text: String::from("Cost: 30 points -> Increase Points Per Second By 1"),
+    button_type: UpgradeButtonType::IncreasePointsPerClick
+    };
+
+    buttons.push(&upgrade_button_1);
+    buttons.push(&upgrade_button_2);
+
+    commands.spawn(upgrade_button(&upgrade_button_1.text));
+    commands.spawn(upgrade_button(&upgrade_button_2.text));
 }
 
-fn upgrade_button(index: u32, button_type: UpgradeButtonType) -> impl Bundle {
-
-    let button_text: &str = match button_type{
-        UpgradeButtonType::IncreasePointsPerClick => "Cost: 10 points -> Increase Points Per Click By 3",
-        UpgradeButtonType::IncreasePointsPerSecond => "Cost: 30 points -> Increase Points Per Second By 1"
-    };
+fn upgrade_button(button_text: &String) -> impl Bundle {
 
     (
         Node {
@@ -92,7 +105,7 @@ fn upgrade_button(index: u32, button_type: UpgradeButtonType) -> impl Bundle {
             Node {
                 width: px(500),
                 height: px(100),
-                top: px(200 + (index * 300)),
+                //top: px(200 + (index * 300)),
                 border: UiRect::all(px(3)),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
