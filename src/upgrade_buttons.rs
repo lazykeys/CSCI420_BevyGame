@@ -27,6 +27,10 @@ enum UpgradeButtonType {
 
 //this is what runs when the button is clicked
 fn upgrade_buttons_system(
+    mut commands: Commands,//for spawning audio
+    asset_server: Res<AssetServer>,
+
+
     mut input_focus: ResMut<InputFocus>,
     mut interaction_query: Query<
         (
@@ -55,6 +59,11 @@ fn upgrade_buttons_system(
                     UpgradeButtonType::IncreasePointsPerClick => stats_resource.increase_points_per_click(1),
                     UpgradeButtonType::IncreasePointsPerSecond => stats_resource.increase_points_per_second(1),
                 }
+
+                commands.spawn((
+                AudioPlayer::new(asset_server.load("audio/LemonClick.ogg")),
+                PlaybackSettings::DESPAWN,
+                ));
 
                 button.set_changed();
             }
