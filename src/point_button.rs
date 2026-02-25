@@ -1,11 +1,11 @@
 use bevy::{color::palettes::basic::*, input_focus::InputFocus, prelude::*};
+use crate::stats::Stats;
 
 pub struct ButtonPlugin;
 
 impl Plugin for ButtonPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<InputFocus>();
-        app.add_message::<PointButtonClicked>();
         app.add_systems(Startup, setup);
         app.add_systems(Update, button_system);
     }
@@ -18,8 +18,8 @@ const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.35, 1.00);
 const BUTTON_ALIGN: AlignItems = AlignItems::Center;
 const BUTTON_LAYOUT: JustifyContent = JustifyContent::Center;
 
-#[derive(Message)]
-pub struct PointButtonClicked;
+#[derive(Component)]
+struct PointButton;
 
 fn button_system(
     mut input_focus: ResMut<InputFocus>,
@@ -30,13 +30,14 @@ fn button_system(
             &mut BackgroundColor,
             &mut BorderColor,
             &mut Button,
+            &PointButton
         ),
         Changed<Interaction>,
         >,
-    mut point_button_click_writer: MessageWriter<PointButtonClicked>
+    mut stats_resource: ResMut<Stats>
 
 ) {
-    for (entity, interaction, mut color, mut border_color, mut button) in
+    for (entity, interaction, mut color, mut border_color, mut button, point_button) in
         &mut interaction_query
     {
         match *interaction {
@@ -45,7 +46,7 @@ fn button_system(
                 *color = PRESSED_BUTTON.into();
                 *border_color = BorderColor::all(BLUE);
 
-                point_button_click_writer.write(PointButtonClicked);
+                stats_resource.gain_points();
 
                 button.set_changed();
             }
@@ -79,6 +80,7 @@ fn button() -> impl Bundle {
         },
         children![(
             Button,
+            PointButton,
             Node {
                 width: px(200),
                 height: px(200),

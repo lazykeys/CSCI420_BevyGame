@@ -1,4 +1,5 @@
 use bevy::{color::palettes::basic::*, input_focus::InputFocus, prelude::*};
+use crate::stats::Stats;
 
 pub struct UpgradeButtonsPlugin;
 
@@ -17,16 +18,14 @@ const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.35, 0.35);
 const UPGRADE_BUTTON_ALIGN: AlignItems = AlignItems::Baseline;
 const UPGRADE_BUTTON_LAYOUT: JustifyContent = JustifyContent::SpaceBetween;
 
+
+#[derive(Component)]
 enum UpgradeButtonType {
     IncreasePointsPerClick,
     IncreasePointsPerSecond
 }
 
-struct UpgradeButton {
-    text: String,
-    button_type: UpgradeButtonType
-}
-
+//this is what runs when the button is clicked
 fn upgrade_buttons_system(
     mut input_focus: ResMut<InputFocus>,
     mut interaction_query: Query<
@@ -36,11 +35,13 @@ fn upgrade_buttons_system(
             &mut BackgroundColor,
             &mut BorderColor,
             &mut Button,
+            &UpgradeButtonType
         ),
         Changed<Interaction>,
         >,
+    mut stats_resource: ResMut<Stats>
 ) {
-    for (entity, interaction, mut color, mut border_color, mut button) in
+    for (entity, interaction, mut color, mut border_color, mut button, button_type) in
         &mut interaction_query
     {
         match *interaction {
@@ -49,8 +50,11 @@ fn upgrade_buttons_system(
                 *color = PRESSED_BUTTON.into();
                 *border_color = BorderColor::all(BLACK);
 
-                //TODO: add point gain on button click
-                //stats_resource.gain_points();
+                match button_type
+                {
+                    UpgradeButtonType::IncreasePointsPerClick => stats_resource.increase_points_per_click(1),
+                    UpgradeButtonType::IncreasePointsPerSecond => stats_resource.increase_points_per_second(1),
+                }
 
                 button.set_changed();
             }
@@ -71,26 +75,28 @@ fn upgrade_buttons_system(
 
 fn setup(mut commands: Commands) {
 
-    let mut buttons: Vec<&UpgradeButton> = Vec::new();
-
-    let upgrade_button_1 = UpgradeButton{
-        text: String::from("Cost: 10 points -> Increase Points Per Click By 3"),
-        button_type: UpgradeButtonType::IncreasePointsPerClick
-    };
-
-    let upgrade_button_2 = UpgradeButton{
-    text: String::from("Cost: 30 points -> Increase Points Per Second By 1"),
-    button_type: UpgradeButtonType::IncreasePointsPerClick
-    };
-
-    buttons.push(&upgrade_button_1);
-    buttons.push(&upgrade_button_2);
-
-    commands.spawn(upgrade_button(&upgrade_button_1.text));
-    commands.spawn(upgrade_button(&upgrade_button_2.text));
+    commands.spawn((
+        Node {
+            width: percent(100),
+            height: percent(100),
+            align_items: AlignItems::Baseline,
+            justify_content: JustifyContent::SpaceEvenly,
+            ..default()
+        },
+        children![(
+            upgrade_button(
+                String::from("Cost: 10 points -> Increase Points Per Click By 3"),
+                UpgradeButtonType::IncreasePointsPerClick
+            ),
+            upgrade_button(
+                String::from("Cost: 30 points -> Increase Points Per Second By 1"),
+                UpgradeButtonType::IncreasePointsPerSecond
+            )
+        )],
+    ));
 }
 
-fn upgrade_button(button_text: &String) -> impl Bundle {
+fn upgrade_button(button_text: String, button_type: UpgradeButtonType) -> impl Bundle {
 
     (
         Node {
@@ -102,6 +108,7 @@ fn upgrade_button(button_text: &String) -> impl Bundle {
         },
         children![(
             Button,
+            button_type,
             Node {
                 width: px(500),
                 height: px(100),

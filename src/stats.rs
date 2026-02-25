@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use crate::point_button::PointButtonClicked;
 
 pub struct StatsPlugin;
 
@@ -8,6 +7,7 @@ impl Plugin for StatsPlugin {
         app.insert_resource(
             Stats {
                 points_per_click: 1,
+                points_per_second: 1,
                 ..default()
             });
         app.add_systems(Startup, build_stats);
@@ -26,16 +26,14 @@ pub struct Stats
 
 impl Stats {
 
-    pub fn gain_points(&mut self, mut point_button_click_reader: MessageReader<PointButtonClicked>)
+    pub fn gain_points(&mut self)
     {
-        for button_click in point_button_click_reader.read() {
-            self.points += self.points_per_click;
-        }
+        self.points += self.points_per_click;
     }
     //function for the timer
     pub fn gain_points_per_second(&mut self)
     {
-        self.points += self.points_per_click;
+        self.points += self.points_per_second;
     }
 
     pub fn increase_points_per_click(&mut self, increase: u32)
@@ -71,30 +69,35 @@ fn build_stats (
     let stats_font_size: f32 = 32.0;
 
     commands.spawn((
-        //The actual text that displays
-        Text2d::new(format!("Points: {}", stats_resource.points)),
-
-        //Text font and sizing
-        TextFont {
-            font: stats_font,
-            font_size: stats_font_size,
+        Node {
+            top: px(50),
+            width: percent(100),
+            height: percent(100),
+            align_items: AlignItems::FlexStart,
+            justify_content: JustifyContent::Center,
             ..default()
         },
+        children!
+        [(
+            //The actual text that displays
+            Text::new(format!("Points: {}", stats_resource.points)),
 
-        //Text justification
-        TextLayout::new_with_justify(Justify::Center),
+            //Text font and sizing
+            TextFont {
+                font: stats_font,
+                font_size: stats_font_size,
+                ..default()
+            },
 
-        //Text positioning
-        Transform::from_xyz(0.0, 300.0, 0.0),
-
-        //what struct holds the data!
-        StatsText
+            //what struct holds the data!
+            StatsText
+        )]
     ));
 }
 
 fn draw_stats (
     stats_resource: Res<Stats>,
-    mut stats_text: Query<&mut Text2d, With<StatsText>>
+    mut stats_text: Query<&mut Text, With<StatsText>>
 )
 {
     for mut entity in stats_text.iter_mut() {
