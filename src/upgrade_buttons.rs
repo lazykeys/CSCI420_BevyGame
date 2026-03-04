@@ -15,10 +15,6 @@ const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.35, 0.35);
 
-const UPGRADE_BUTTON_ALIGN: AlignItems = AlignItems::Baseline;
-const UPGRADE_BUTTON_LAYOUT: JustifyContent = JustifyContent::SpaceBetween;
-
-
 #[derive(Component)]
 enum UpgradeButtonType {
     IncreasePointsPerClick,
@@ -83,53 +79,44 @@ fn upgrade_buttons_system(
 }
 
 fn setup(mut commands: Commands) {
-
     commands.spawn((
         Node {
+            flex_direction: FlexDirection::Column,
+            row_gap: Val::Px(50.0),
+            align_items: AlignItems::Baseline,
+            justify_content: JustifyContent::FlexStart,
             width: percent(100),
             height: percent(100),
-            align_items: AlignItems::Baseline,
-            justify_content: JustifyContent::SpaceEvenly,
             ..default()
         },
-        children![(
+        children![
             upgrade_button(
                 String::from("Cost: 10 points -> Increase Points Per Click By 3"),
                 UpgradeButtonType::IncreasePointsPerClick
             ),
+
             upgrade_button(
                 String::from("Cost: 30 points -> Increase Points Per Second By 1"),
                 UpgradeButtonType::IncreasePointsPerSecond
             )
-        )],
+        ],
     ));
 }
 
 fn upgrade_button(button_text: String, button_type: UpgradeButtonType) -> impl Bundle {
-
     (
+        Button,
+        button_type,
         Node {
-            width: percent(100),
-            height: percent(100),
-            align_items: UPGRADE_BUTTON_ALIGN,
-            justify_content: UPGRADE_BUTTON_LAYOUT,
+            height: px(100),
+            width: px(500),
+            border: UiRect::all(px(3)),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
             ..default()
         },
-        children![(
-            Button,
-            button_type,
-            Node {
-                width: px(500),
-                height: px(100),
-                //top: px(200 + (index * 300)),
-                border: UiRect::all(px(3)),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            BorderColor::all(Color::WHITE),
-            BackgroundColor(Color::BLACK),
-            children![(Text::new(button_text), TextColor(Color::srgb(0.9, 0.9, 0.9)))]
-        )],
+        BorderColor::all(Color::WHITE),
+        BackgroundColor(Color::BLACK),
+        children![(Text::new(button_text), TextColor(Color::srgb(0.9, 0.9, 0.9)))]
     )
 }
