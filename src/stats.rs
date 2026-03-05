@@ -36,21 +36,37 @@ impl Stats {
         self.points += self.points_per_second;
     }
 
-    pub fn increase_points_per_click(&mut self, increase: u32)
+    pub fn increase_points_per_click(&mut self, 
+        //2 params added
+        mut commands: &mut Commands,//for spawning audio
+        asset_server: &Res<AssetServer>, increase: u32)
     {
         if self.points >= 10
         {
             self.points -= 10;
             self.points_per_click += increase;
+
+            commands.spawn((
+                AudioPlayer::new(asset_server.load("audio/CashSound.ogg")),
+                PlaybackSettings::DESPAWN,
+                ));
         }
     }
 
-    pub fn increase_points_per_second(&mut self, increase: u32)
+    pub fn increase_points_per_second(&mut self,
+        //2 params added
+        mut commands: &mut Commands,//for spawning audio
+        asset_server: &Res<AssetServer>, increase: u32)
     {
         if self.points >= 30
         {
             self.points -= 30;
             self.points_per_second += increase;
+            
+            commands.spawn((
+                AudioPlayer::new(asset_server.load("audio/CashSound.ogg")),
+                PlaybackSettings::DESPAWN,
+                ));
         }
     }
 }

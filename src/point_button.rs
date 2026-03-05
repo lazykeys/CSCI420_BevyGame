@@ -23,6 +23,8 @@ struct PointButton;
 
 fn button_system(
     mut input_focus: ResMut<InputFocus>,
+    mut commands: Commands,//for spawning audio
+    asset_server: Res<AssetServer>,
     mut interaction_query: Query<
         (
             Entity,
@@ -49,6 +51,10 @@ fn button_system(
                 stats_resource.gain_points();
 
                 button.set_changed();
+                commands.spawn((
+                AudioPlayer::new(asset_server.load("audio/LemonClick.ogg")),
+                PlaybackSettings::DESPAWN,
+                ));
             }
             Interaction::Hovered => {
                 input_focus.set(entity);
