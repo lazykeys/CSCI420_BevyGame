@@ -1,4 +1,4 @@
-use bevy::{color::palettes::basic::*, input_focus::InputFocus, prelude::*};
+use bevy::{input_focus::InputFocus, prelude::*};
 use crate::stats::Stats;
 
 pub struct ButtonPlugin;
@@ -11,15 +11,8 @@ impl Plugin for ButtonPlugin {
     }
 }
 
-const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.85);
-const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.95);
-const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.35, 1.00);
-
 const BUTTON_ALIGN: AlignItems = AlignItems::Center;
 const BUTTON_LAYOUT: JustifyContent = JustifyContent::Center;
-
-#[derive(Component)]
-struct PointButton;
 
 fn button_system(
     mut input_focus: ResMut<InputFocus>,
@@ -29,24 +22,19 @@ fn button_system(
         (
             Entity,
             &Interaction,
-            &mut BackgroundColor,
-            &mut BorderColor,
             &mut Button,
-            &PointButton
         ),
         Changed<Interaction>,
         >,
     mut stats_resource: ResMut<Stats>
 
 ) {
-    for (entity, interaction, mut color, mut border_color, mut button, point_button) in
+    for (entity, interaction, mut button) in
         &mut interaction_query
     {
         match *interaction {
             Interaction::Pressed => {
                 input_focus.set(entity);
-                *color = PRESSED_BUTTON.into();
-                *border_color = BorderColor::all(BLUE);
 
                 stats_resource.gain_points();
 
@@ -58,24 +46,20 @@ fn button_system(
             }
             Interaction::Hovered => {
                 input_focus.set(entity);
-                *color = HOVERED_BUTTON.into();
-                *border_color = BorderColor::all(Color::WHITE);
                 button.set_changed();
             }
             Interaction::None => {
                 input_focus.clear();
-                *color = NORMAL_BUTTON.into();
-                *border_color = BorderColor::all(Color::BLACK);
             }
         }
     }
 }
 
-fn setup(mut commands: Commands) {
-    commands.spawn(button());
+fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(button(asset_server));
 }
 
-fn button() -> impl Bundle {
+fn button(asset_server: Res<AssetServer>) -> impl Bundle {
     (
         Node {
             width: percent(100),
@@ -86,18 +70,14 @@ fn button() -> impl Bundle {
         },
         children![(
             Button,
-            PointButton,
+            ImageNode::new(asset_server.load("sprites\\Lemon.png")),
             Node {
                 width: px(200),
                 height: px(200),
-                border: UiRect::all(px(5)),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
-                border_radius: BorderRadius::MAX,
                 ..default()
             },
-            BorderColor::all(Color::WHITE),
-            BackgroundColor(Color::BLACK),
         )],
     )
 }
